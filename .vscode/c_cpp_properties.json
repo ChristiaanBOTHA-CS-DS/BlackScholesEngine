@@ -1,0 +1,12 @@
+
+{
+    "configurations": [
+        {
+            "name": "BlackScholesEngine",
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "intelliSenseMode": "windows-msvc-x64",
+            "cppStandard": "c++20"
+        }
+    ],
+    "version": 4
+}
