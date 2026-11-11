@@ -14,6 +14,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Black-Scholes library
 add_library(blackscholes
     src/black_scholes.cpp
+    src/greeks.cpp
+    src/binomial.cpp
 )
 
 target_include_directories(blackscholes
