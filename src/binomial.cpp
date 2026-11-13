@@ -1,10 +1,10 @@
 
 #include "blackscholes/binomial.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <vector>
-#include <algorithm>
 
 namespace blackscholes {
 
@@ -42,6 +42,22 @@ namespace blackscholes {
             );
         }
 
+        if (option.exercise_style != ExerciseStyle::European
+            && option.exercise_style != ExerciseStyle::American) {
+
+            throw std::invalid_argument(
+                "Invalid exercise style."
+            );
+        }
+
+        if (option.type != OptionType::Call
+            && option.type != OptionType::Put) {
+
+            throw std::invalid_argument(
+                "Invalid option type."
+            );
+        }
+
         // Calculate the length of each time step
         const double dt = T / steps;
 
@@ -74,13 +90,8 @@ namespace blackscholes {
             if (option.type == OptionType::Call) {
                 values[j] = std::max(stock_price - K, 0.0);
             }
-            else if (option.type == OptionType::Put) {
-                values[j] = std::max(K - stock_price, 0.0);
-            }
             else {
-                throw std::invalid_argument(
-                    "Invalid Option Type."
-                );
+                values[j] = std::max(K - stock_price, 0.0);
             }
         }
 
@@ -89,11 +100,41 @@ namespace blackscholes {
 
             for (int j = 0; j <= i; ++j) {
 
-                values[j] = discount * (
-                    p * values[j + 1]
-                    + (1.0 - p) * values[j]
-                );
+                // Calculate continuation value
+                const double continuation_value =
+                    discount * (
+                        p * values[j + 1]
+                        + (1.0 - p) * values[j]
+                    );
 
+                // European options can only be exercised at maturity
+                if (option.exercise_style == ExerciseStyle::European) {
+
+                    values[j] = continuation_value;
+
+                }
+                // American options can be exercised at any node
+                else {
+
+                    const double stock_price =
+                        S * std::pow(u, j) * std::pow(d, i - j);
+
+                    double exercise_value;
+
+                    if (option.type == OptionType::Call) {
+                        exercise_value =
+                            std::max(stock_price - K, 0.0);
+                    }
+                    else {
+                        exercise_value =
+                            std::max(K - stock_price, 0.0);
+                    }
+
+                    values[j] = std::max(
+                        exercise_value,
+                        continuation_value
+                    );
+                }
             }
         }
 

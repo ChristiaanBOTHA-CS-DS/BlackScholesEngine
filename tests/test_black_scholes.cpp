@@ -15,7 +15,9 @@ using namespace blackscholes;
 TEST(BlackScholesTests, EuropeanCallPrice) {
 
     EuropeanOption call{
-        OptionType::Call, 100.0, 100.0, 1.0, 0.05, 0.20, 0.0
+        OptionType::Call, 
+        ExerciseStyle::European,
+        100.0, 100.0, 1.0, 0.05, 0.20, 0.0
     };
 
     const double result = price(call);
@@ -28,7 +30,9 @@ TEST(BlackScholesTests, EuropeanCallPrice) {
 TEST(BlackScholesTests, EuropeanPutPrice) {
 
     EuropeanOption put{
-        OptionType::Put, 100.0, 100.0, 1.0, 0.05, 0.20, 0.0
+        OptionType::Put, 
+        ExerciseStyle::European,
+        100.0, 100.0, 1.0, 0.05, 0.20, 0.0
     };
 
     const double result = price(put);
@@ -41,11 +45,15 @@ TEST(BlackScholesTests, EuropeanPutPrice) {
 TEST(BlackScholesTests, PutCallParity) {
 
     EuropeanOption call{
-        OptionType::Call, 100.0, 100.0, 1.0, 0.05, 0.20, 0.0
+        OptionType::Call, 
+        ExerciseStyle::European,
+        100.0, 100.0, 1.0, 0.05, 0.20, 0.0
     };
 
     EuropeanOption put{
-        OptionType::Put, 100.0, 100.0, 1.0, 0.05, 0.20, 0.0
+        OptionType::Put, 
+        ExerciseStyle::European,
+        100.0, 100.0, 1.0, 0.05, 0.20, 0.0
     };
 
     const double call_price = price(call);
@@ -62,7 +70,9 @@ TEST(BlackScholesTests, PutCallParity) {
 TEST(BlackScholesTests, RejectsInvalidSpotPrice) {
 
     EuropeanOption option{
-        OptionType::Call, -100.0, 100.0, 1.0, 0.05, 0.20, 0.0
+        OptionType::Call, 
+        ExerciseStyle::European,
+        -100.0, 100.0, 1.0, 0.05, 0.20, 0.0
     };
 
     EXPECT_THROW(price(option), std::invalid_argument);
@@ -73,7 +83,9 @@ TEST(BlackScholesTests, RejectsInvalidSpotPrice) {
 TEST(BlackScholesTests, RejectsInvalidVolatility) {
 
     EuropeanOption option{
-        OptionType::Call, 100.0, 100.0, 1.0, 0.05, 0.0, 0.0
+        OptionType::Call, 
+        ExerciseStyle::European,
+        100.0, 100.0, 1.0, 0.05, 0.0, 0.0
     };
 
     EXPECT_THROW(price(option), std::invalid_argument);
@@ -155,6 +167,7 @@ TEST(BlackScholesTests, CallGreeksMatchFiniteDifferences) {
 
     EuropeanOption call{
         OptionType::Call,
+        ExerciseStyle::European,
         100.0, 100.0, 1.0, 0.05, 0.20, 0.0
     };
 
@@ -167,6 +180,7 @@ TEST(BlackScholesTests, PutGreeksMatchFiniteDifferences) {
 
     EuropeanOption put{
         OptionType::Put,
+        ExerciseStyle::European,
         100.0, 100.0, 1.0, 0.05, 0.20, 0.0
     };
 
@@ -180,6 +194,7 @@ TEST(BlackScholesTests, BinomialCallConvergesToBlackScholes) {
 
     EuropeanOption call{
         OptionType::Call,
+        ExerciseStyle::European,
         100.0, 100.0, 1.0, 0.05, 0.20, 0.0
     };
 
@@ -195,6 +210,7 @@ TEST(BlackScholesTests, BinomialPutConvergesToBlackScholes) {
 
     EuropeanOption put{
         OptionType::Put,
+        ExerciseStyle::European,
         100.0, 100.0, 1.0, 0.05, 0.20, 0.0
     };
 
@@ -210,11 +226,13 @@ TEST(BlackScholesTests, BinomialPutCallParity) {
 
     EuropeanOption call{
         OptionType::Call,
+        ExerciseStyle::European,
         100.0, 100.0, 1.0, 0.05, 0.20, 0.02
     };
 
     EuropeanOption put{
         OptionType::Put,
+        ExerciseStyle::European,
         100.0, 100.0, 1.0, 0.05, 0.20, 0.02
     };
 
@@ -236,6 +254,7 @@ TEST(BlackScholesTests, RejectsZeroBinomialSteps) {
 
     EuropeanOption call{
         OptionType::Call,
+        ExerciseStyle::European,
         100.0, 100.0, 1.0, 0.05, 0.20, 0.0
     };
 
@@ -245,3 +264,79 @@ TEST(BlackScholesTests, RejectsZeroBinomialSteps) {
     );
 }
 
+// TEST 12: American call equals European call
+// for a non-dividend-paying stock
+TEST(BlackScholesTests, AmericanCallEqualsEuropeanCall) {
+
+    Option european_call{
+        OptionType::Call,
+        ExerciseStyle::European,
+        100.0, 100.0, 1.0, 0.05, 0.20, 0.0
+    };
+
+    Option american_call{
+        OptionType::Call,
+        ExerciseStyle::American,
+        100.0, 100.0, 1.0, 0.05, 0.20, 0.0
+    };
+
+    const double european_price =
+        price_binomial(european_call, 500);
+
+    const double american_price =
+        price_binomial(american_call, 500);
+
+    EXPECT_NEAR(american_price, european_price, 1e-9);
+}
+
+
+// TEST 13: American put is worth at least as much
+// as its equivalent European put
+TEST(BlackScholesTests, AmericanPutWorthAtLeastEuropeanPut) {
+
+    Option european_put{
+        OptionType::Put,
+        ExerciseStyle::European,
+        100.0, 100.0, 1.0, 0.05, 0.20, 0.0
+    };
+
+    Option american_put{
+        OptionType::Put,
+        ExerciseStyle::American,
+        100.0, 100.0, 1.0, 0.05, 0.20, 0.0
+    };
+
+    const double european_price =
+        price_binomial(european_put, 500);
+
+    const double american_price =
+        price_binomial(american_put, 500);
+
+    EXPECT_GE(american_price, european_price);
+}
+
+
+// TEST 14: American call with dividends
+// is worth at least as much as its European equivalent
+TEST(BlackScholesTests, AmericanCallWorthAtLeastEuropeanCall) {
+
+    Option european_call{
+        OptionType::Call,
+        ExerciseStyle::European,
+        100.0, 100.0, 1.0, 0.05, 0.20, 0.04
+    };
+
+    Option american_call{
+        OptionType::Call,
+        ExerciseStyle::American,
+        100.0, 100.0, 1.0, 0.05, 0.20, 0.04
+    };
+
+    const double european_price =
+        price_binomial(european_call, 500);
+
+    const double american_price =
+        price_binomial(american_call, 500);
+
+    EXPECT_GE(american_price, european_price);
+}

@@ -14,6 +14,7 @@ int main() {
     //Define a European Call Option
     EuropeanOption call {
         OptionType::Call,
+        ExerciseStyle::European,
         100.0,   //Spot Price
         100.0,   //Strike Price
         1.0,     //Time To Maturity
@@ -26,6 +27,7 @@ int main() {
     EuropeanOption put{
 
         OptionType::Put,
+        ExerciseStyle::European,
         100.0,   //Spot Price
         100.0,   //Strike Price
         1.0,     //Time To Maturity
@@ -118,6 +120,45 @@ int main() {
                 << std::setw(18) << binomial_put
                 << '\n';
     }
+
+    // American vs European option comparison
+
+    std::cout << "\nAmerican vs European Options\n";
+    std::cout << "-----------------------------\n";
+
+    Option european_put{
+        OptionType::Put,
+        ExerciseStyle::European,
+        100.0, 100.0, 1.0, 0.05, 0.20, 0.0
+    };
+
+    Option american_put{
+        OptionType::Put,
+        ExerciseStyle::American,
+        100.0, 100.0, 1.0, 0.05, 0.20, 0.0
+    };
+
+    const unsigned int comparison_steps = 500;
+
+    const double european_put_price =
+        price_binomial(european_put, comparison_steps);
+
+    const double american_put_price =
+        price_binomial(american_put, comparison_steps);
+
+    const double early_exercise_premium =
+        american_put_price - european_put_price;
+
+    std::cout << std::fixed << std::setprecision(6);
+
+    std::cout << "European Put: R"
+            << european_put_price << '\n';
+
+    std::cout << "American Put: R"
+            << american_put_price << '\n';
+
+    std::cout << "Early Exercise Premium: R"
+            << early_exercise_premium << '\n';
 
     return 0;
 
